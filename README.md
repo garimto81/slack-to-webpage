@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Slack to Webpage Automator
 
-## Getting Started
+This project automatically creates and updates a webpage based on messages and threads from a specific Slack channel. It uses Gemini AI to transform Slack messages into well-formatted, readable HTML content, which is then hosted on Vercel.
 
-First, run the development server:
+## Key Features
+
+- **Real-time Automation:** New Slack messages instantly generate a new webpage.
+- **Thread Updates:** Replies in a Slack thread are automatically appended to the corresponding webpage, creating a cohesive narrative.
+- **AI-Powered Content:** Leverages Google's Gemini AI to intelligently format raw text into structured HTML with enhanced readability.
+- **Serverless Architecture:** Built with Next.js and hosted on Vercel, utilizing Vercel Postgres for data storage.
+
+---
+
+## Tech Stack
+
+- **Framework:** [Next.js](https://nextjs.org/) (App Router)
+- **Language:** [TypeScript](https://www.typescriptlang.org/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/) with [@tailwindcss/typography](https://tailwindcss.com/docs/typography-plugin)
+- **Database:** [Vercel Postgres](https://vercel.com/storage/postgres)
+- **AI:** [Google Gemini](https://gemini.google.com/)
+- **Deployment:** [Vercel](https://vercel.com)
+- **API:** [Slack Bolt](https://slack.dev/bolt-js)
+
+---
+
+## Setup and Configuration
+
+### 1. Clone the Repository
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/garimto81/slack-to-webpage.git
+cd slack-to-webpage
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Install Dependencies
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Set Up Environment Variables
 
-## Learn More
+This project requires several environment variables for its services to work. You can manage them by creating a `.env.local` file in the root of the project.
 
-To learn more about Next.js, take a look at the following resources:
+1.  **Link to Vercel Project:**
+    Connect your local repository to a Vercel project to handle environment variables seamlessly.
+    ```bash
+    npx vercel link
+    ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2.  **Add Secrets to Vercel:**
+    Use the Vercel CLI to add your secret keys. This is the recommended way to avoid exposing secrets.
+    ```bash
+    # Add your Gemini API Key
+    npx vercel env add GEMINI_API_KEY
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+    # Add your Slack Bot Token (starts with xoxb-)
+    npx vercel env add SLACK_BOT_TOKEN
 
-## Deploy on Vercel
+    # Add your Slack Signing Secret
+    npx vercel env add SLACK_SIGNING_SECRET
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+    # Add the ID of the Slack channel you want to monitor
+    npx vercel env add SLACK_CHANNEL_ID
+    ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3.  **Pull Environment Variables Locally:**
+    This command will create a `.env.local` file with all the variables you set up in Vercel, including the `POSTGRES_URL` from your Vercel Postgres database.
+    ```bash
+    npx vercel env pull .env.local
+    ```
+
+### 4. Create Database Table
+
+Connect to your Vercel Postgres database and run the SQL script located in `scripts/create-pages-table.sql` to create the `pages` table.
+
+### 5. Deploy to Vercel
+
+Commit any changes and push to your main branch. Vercel will automatically build and deploy the project.
+
+```bash
+git push origin main
+```
+
+---
+
+## How It Works
+
+1.  **Event Trigger:** A new message in the designated Slack channel triggers an event.
+2.  **API Endpoint:** The event is sent to the `/api/slack/events` endpoint deployed on Vercel.
+3.  **AI Transformation:** The API forwards the message content to Gemini AI, which returns a structured HTML version.
+4.  **Database Storage:** The generated HTML is stored in the Vercel Postgres database, linked to the Slack message's timestamp (`thread_ts`).
+5.  **Frontend Rendering:** When a user visits `/<thread_ts>`, the Next.js frontend fetches the HTML from the database and renders it.
